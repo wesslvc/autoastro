@@ -27,7 +27,7 @@ export default function Capture() {
   return (
     <div className="pad with-dock">
       <header className="head">
-        <p className="eyebrow">{capturing ? <><span className="dot busy" />노출 중 · <span className="num">{prog}%</span></> : "카메라"}</p>
+        <p className={`eyebrow${capturing ? " tone-busy" : ""}`}>{capturing ? <>노출 중 · <span className="num">{prog}%</span></> : "카메라"}</p>
         <h1 className="title">{capturing ? `프레임 ${(s?.camera.frameCount ?? 0) + 1}` : "촬영 준비"}</h1>
         <p className="meta">{s?.camera.model ?? "카메라"} · 센서 <span className="num">{s?.camera.temperatureC.toFixed(1) ?? "-"}°C</span></p>
       </header>

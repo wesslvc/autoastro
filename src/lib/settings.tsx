@@ -31,7 +31,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     if (s.night) root.dataset.theme = "night";
     else delete root.dataset.theme;
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", s.night ? "#070202" : "#0a0a0b");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", s.night ? "#070202" : "#0a0e1a");
   }, [s]);
 
   // Keep the screen on while at the telescope. The lock drops when the tab is

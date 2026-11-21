@@ -26,8 +26,8 @@ function Curve({ pts }: { pts: { hoursFromNow: number; altitude: number }[] }) {
         <text key={h} x={X(h)} y={H - 5} textAnchor="middle" className="curve-label">{h === 0 ? "지금" : `+${h}h`}</text>
       ))}
       <path d={d} className="curve-line" />
-      <circle cx={X(peak.hoursFromNow)} cy={Y(peak.altitude)} r={3.5} className="curve-peak" />
-      <circle cx={X(pts[0].hoursFromNow)} cy={Y(pts[0].altitude)} r={4} className="curve-now" />
+      <line x1={X(peak.hoursFromNow)} x2={X(peak.hoursFromNow)} y1={Y(peak.altitude)} y2={Y(0)} className="curve-peak" />
+      <text x={X(peak.hoursFromNow)} y={Y(peak.altitude) - 8} textAnchor="middle" className="curve-peak-label">최고 {peak.altitude.toFixed(0)}°</text>
     </svg>
   );
 }

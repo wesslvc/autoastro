@@ -24,9 +24,8 @@ export function SkyDome({ mount, target }: { mount: { alt: number; az: number } 
       ))}
       <text x={c + 4} y={c - (R * 60) / 90 + 12} className="dome-tick">30°</text>
       <text x={c + 4} y={c - (R * 30) / 90 + 12} className="dome-tick">60°</text>
-      {tg && m && <line x1={m.x} y1={m.y} x2={tg.x} y2={tg.y} className="dome-path" />}
       {tg && <circle cx={tg.x} cy={tg.y} r={8} className="dome-target" />}
-      {m && <circle cx={m.x} cy={m.y} r={4.5} className="dome-mount" />}
+      {m && <path d={`M${m.x - 6},${m.y}h12M${m.x},${m.y - 6}v12`} className="dome-mount" />}
     </svg>
   );
 }

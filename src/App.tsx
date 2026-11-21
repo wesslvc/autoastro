@@ -59,10 +59,9 @@ export default function App() {
       <div className="app">
         <header className="bar">
           <button type="button" className="brand" onClick={() => setSettings(true)} aria-label="설정 열기">
-            <span className={`dot ${link}`} />
             <span>
               <b>원격 천문대</b>
-              <small>{link === "ok" ? (st?.mock ? "시뮬레이터" : "N.I.N.A. 연결됨") : link === "wait" ? "연결 중" : "연결 끊김"}</small>
+              <small className={`tone-${link}`}>{link === "ok" ? (st?.mock ? "시뮬레이터" : "N.I.N.A. 연결됨") : link === "wait" ? "연결 중" : "연결 끊김"}</small>
             </span>
           </button>
           <div className="bar-right">

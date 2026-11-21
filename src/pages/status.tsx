@@ -29,7 +29,7 @@ export default function Status({ onGoto, onCapture }: { onGoto: () => void; onCa
   return (
     <div className="pad">
       <header className="head">
-        <p className="eyebrow"><span className={`dot ${busy ? "busy" : m.tracking ? "ok" : "idle"}`} />{stateKo[m.state] ?? m.state}</p>
+        <p className={`eyebrow tone-${busy ? "busy" : m.tracking ? "ok" : "idle"}`}>{stateKo[m.state] ?? m.state}</p>
         <h1 className="title">{t ? t.name : "관측 대상 없음"}</h1>
         <p className="meta">{t ? [t.catalogId, t.type, t.constellation].filter(Boolean).join(" · ") : "대상 화면에서 오늘 밤 볼 천체를 고르세요"}</p>
       </header>
@@ -63,21 +63,21 @@ export default function Status({ onGoto, onCapture }: { onGoto: () => void; onCa
       </div>
       <SkyDome mount={m.parked ? null : { alt: m.altitude, az: m.azimuth }} target={t ? { alt: t.altitude, az: t.azimuth, name: t.name } : null} />
       <div className="legend">
-        <span><i className="lg-mount" />망원경</span>
-        {t && <span><i className="lg-target" />{t.aboveHorizon ? t.name : "대상 (지평선 아래)"}</span>}
+        <span className="tone-accent">+ 망원경</span>
+        {t && <span className="tone-ok">○ {t.aboveHorizon ? t.name : "대상 (지평선 아래)"}</span>}
       </div>
       <p className={`solver${s.solver.state === "failed" ? " bad" : ""}`}>
         {solverKo[s.solver.state]}
         {s.solver.errorArcmin != null && <span className="num"> · 오차 {s.solver.errorArcmin.toFixed(1)}′</span>}
-        {s.solver.message && <span className="dim"> — {s.solver.message}</span>}
+        {s.solver.message && s.solver.message !== solverKo[s.solver.state] && <span className="dim"> — {s.solver.message}</span>}
       </p>
 
       <h2 className="section">장비</h2>
       <dl className="kv">
-        <div><dt>마운트</dt><dd><span className={`dot ${m.connected ? "ok" : "off"}`} />{m.connected ? stateKo[m.state] : "연결 안 됨"}</dd></div>
-        <div><dt>카메라</dt><dd><span className={`dot ${c.connected ? "ok" : "off"}`} />{c.connected ? c.model || "연결됨" : "연결 안 됨"}</dd></div>
+        <div><dt>마운트</dt><dd className={m.connected ? "tone-ok" : "dim"}>{m.connected ? stateKo[m.state] : "연결 안 됨"}</dd></div>
+        <div><dt>카메라</dt><dd className={c.connected ? "tone-ok" : "dim"}>{c.connected ? c.model || "연결됨" : "연결 안 됨"}</dd></div>
         <div><dt>센서 온도</dt><dd className="num">{c.temperatureC.toFixed(1)}°C</dd></div>
-        <div><dt>포커서</dt><dd><span className={`dot ${s.focuser.connected ? "ok" : "off"}`} /><span className="num">{s.focuser.connected ? s.focuser.position.toLocaleString() : "연결 안 됨"}</span></dd></div>
+        <div><dt>포커서</dt><dd className={s.focuser.connected ? "" : "dim"}><span className="num">{s.focuser.connected ? s.focuser.position.toLocaleString() : "연결 안 됨"}</span></dd></div>
       </dl>
 
       <h2 className="section">파킹</h2>

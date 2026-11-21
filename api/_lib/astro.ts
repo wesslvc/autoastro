@@ -1,4 +1,9 @@
-import * as Astronomy from "astronomy-engine";
+import { createRequire } from "node:module";
+import type * as AstronomyNs from "astronomy-engine";
+
+// The package's ESM build lacks "type": "module", so Node on Vercel cannot
+// load it. Use the CommonJS build instead.
+const Astronomy: typeof AstronomyNs = createRequire(import.meta.url)("astronomy-engine");
 import type { CatalogEntry } from "./catalog.js";
 
 const lat = Number(process.env["OBSERVER_LAT"] ?? 37.5665);
@@ -15,7 +20,7 @@ export interface SkyPosition {
 /** Equatorial position (J2000 for catalog objects, of-date for solar-system bodies). */
 export function equatorial(entry: CatalogEntry, date: Date): { raHours: number; decDegrees: number } {
   if (entry.body) {
-    const eq = Astronomy.Equator(entry.body as Astronomy.Body, date, observer, false, true);
+    const eq = Astronomy.Equator(entry.body as AstronomyNs.Body, date, observer, false, true);
     return { raHours: eq.ra, decDegrees: eq.dec };
   }
   return { raHours: entry.raHours, decDegrees: entry.decDegrees };
