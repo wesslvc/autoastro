@@ -1,7 +1,7 @@
-import { logger } from "../logger";
-import { MockNina } from "./mockNina";
-import { RealNina } from "./realNina";
-import type { NinaAdapter } from "./types";
+import { logger } from "../logger.js";
+import { MockNina } from "./mockNina.js";
+import { RealNina } from "./realNina.js";
+import type { NinaAdapter } from "./types.js";
 
 /**
  * NINA_API_URL (e.g. http://localhost:1888/v2/api) selects the real N.I.N.A.

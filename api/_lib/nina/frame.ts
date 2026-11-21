@@ -1,4 +1,4 @@
-import type { CatalogEntry } from "../catalog";
+import type { CatalogEntry } from "../catalog.js";
 
 function rng(seed: number) {
   let s = seed >>> 0 || 1;

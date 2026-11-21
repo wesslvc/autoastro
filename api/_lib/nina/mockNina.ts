@@ -1,7 +1,7 @@
-import type { CatalogEntry } from "../catalog";
-import { horizontal, equatorial, round } from "../astro";
-import type { CoreStatus, Frame, MountState, NinaAdapter, SolverState } from "./types";
-import { histogram, renderFrame } from "./frame";
+import type { CatalogEntry } from "../catalog.js";
+import { horizontal, equatorial, round } from "../astro.js";
+import type { CoreStatus, Frame, MountState, NinaAdapter, SolverState } from "./types.js";
+import { histogram, renderFrame } from "./frame.js";
 
 /**
  * Built-in simulation of N.I.N.A. + Advanced API plugin, so the app can be

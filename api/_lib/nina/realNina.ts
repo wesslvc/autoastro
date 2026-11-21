@@ -1,8 +1,8 @@
 import jpeg from "jpeg-js";
-import type { CatalogEntry } from "../catalog";
-import { equatorial, round } from "../astro";
-import { logger } from "../logger";
-import type { CoreStatus, Frame, MountState, NinaAdapter } from "./types";
+import type { CatalogEntry } from "../catalog.js";
+import { equatorial, round } from "../astro.js";
+import { logger } from "../logger.js";
+import type { CoreStatus, Frame, MountState, NinaAdapter } from "./types.js";
 
 /**
  * Adapter for the N.I.N.A. "Advanced API" plugin (v2, REST, default port 1888).

@@ -1,5 +1,5 @@
 import * as Astronomy from "astronomy-engine";
-import type { CatalogEntry } from "./catalog";
+import type { CatalogEntry } from "./catalog.js";
 
 const lat = Number(process.env["OBSERVER_LAT"] ?? 37.5665);
 const lon = Number(process.env["OBSERVER_LON"] ?? 126.978);

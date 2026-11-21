@@ -1,4 +1,4 @@
-import type { CatalogEntry } from "../catalog";
+import type { CatalogEntry } from "../catalog.js";
 
 export type MountState = "idle" | "slewing" | "tracking" | "parking" | "parked" | "stopped";
 export type SolverState = "idle" | "solving" | "centered" | "failed";

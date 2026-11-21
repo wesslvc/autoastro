@@ -4,10 +4,10 @@ import {
   SearchTargetsQueryParams,
   StartCaptureBody,
   StartGotoBody,
-} from "./schemas";
-import { searchCatalog, findEntry, type CatalogEntry } from "./catalog";
-import { altitudeCurve, skyPosition } from "./astro";
-import { nina } from "./nina";
+} from "./schemas.js";
+import { searchCatalog, findEntry, type CatalogEntry } from "./catalog.js";
+import { altitudeCurve, skyPosition } from "./astro.js";
+import { nina } from "./nina/index.js";
 
 const router: IRouter = Router();
 
