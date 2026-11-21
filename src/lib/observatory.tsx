@@ -10,6 +10,7 @@ import {
   useParkMount,
   type ObservatoryStatus,
 } from "./api";
+import { buzz } from "./settings";
 
 type Toast = { id: number; msg: string; err: boolean };
 const ToastCtx = createContext<(msg: string, err?: boolean) => void>(() => {});
@@ -20,12 +21,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const push = useCallback((msg: string, err = false) => {
     const id = Date.now();
     setT({ id, msg, err });
-    setTimeout(() => setT((x) => (x?.id === id ? null : x)), 3500);
+    if (err) buzz(40);
+    setTimeout(() => setT((x) => (x?.id === id ? null : x)), 3200);
   }, []);
   return (
     <ToastCtx.Provider value={push}>
       {children}
-      {t && <div className={`toast${t.err ? " err" : ""}`} role="status">{t.msg}</div>}
+      <div className="toast-slot" aria-live="polite">
+        {t && <div key={t.id} className={`toast${t.err ? " err" : ""}`}>{t.msg}</div>}
+      </div>
     </ToastCtx.Provider>
   );
 }
@@ -50,16 +54,26 @@ export function useActions() {
   return {
     goto: useStartGoto({ mutation: { onSuccess: ok("GoTo를 시작했습니다"), onError } }),
     start: useStartCapture({ mutation: { onSuccess: ok("촬영을 시작했습니다"), onError } }),
-    stop: useStopCapture({ mutation: { onSuccess: ok("촬영을 정지했습니다"), onError } }),
-    estop: useEmergencyStop({ mutation: { onSuccess: ok("비상 정지를 실행했습니다"), onError } }),
+    stop: useStopCapture({ mutation: { onSuccess: ok("촬영을 멈췄습니다"), onError } }),
+    estop: useEmergencyStop({ mutation: { onSuccess: ok("모든 장비를 정지했습니다"), onError } }),
     park: useParkMount({ mutation: { onSuccess: ok("파킹을 시작했습니다"), onError } }),
   };
 }
 
 export const fmtRa = (h: number) => {
-  const hh = Math.floor(h);
-  const m = Math.floor((h - hh) * 60);
-  const s = Math.round(((h - hh) * 60 - m) * 60);
-  return `${hh}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`;
+  let hh = Math.floor(h);
+  let m = Math.floor((h - hh) * 60);
+  let s = Math.round(((h - hh) * 60 - m) * 60);
+  if (s === 60) { s = 0; m += 1; }
+  if (m === 60) { m = 0; hh = (hh + 1) % 24; }
+  return `${String(hh).padStart(2, "0")}h ${String(m).padStart(2, "0")}m ${String(s).padStart(2, "0")}s`;
 };
-export const fmtDeg = (d: number) => `${d >= 0 ? "+" : "-"}${Math.abs(d).toFixed(2)}°`;
+export const fmtDec = (d: number) => {
+  const a = Math.abs(d);
+  const deg = Math.floor(a);
+  const min = Math.floor((a - deg) * 60);
+  const sec = Math.round(((a - deg) * 60 - min) * 60);
+  return `${d < 0 ? "−" : "+"}${String(deg).padStart(2, "0")}° ${String(min).padStart(2, "0")}′ ${String(Math.min(sec, 59)).padStart(2, "0")}″`;
+};
+export const fmtExp = (s: number) => (s < 1 ? `${+(s * 1000).toFixed(1)}ms` : `${+s.toFixed(1)}s`);
+export const compass = (az: number) => ["북", "북동", "동", "남동", "남", "남서", "서", "북서"][Math.round((((az % 360) + 360) % 360) / 45) % 8];

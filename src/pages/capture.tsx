@@ -1,27 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useGetImageHistogram, getGetImageHistogramQueryKey, useListPresets, getListPresetsQueryKey } from "../lib/api";
-import { useStatus, useActions } from "../lib/observatory";
-import { Frame } from "../components/parts";
+import { useStatus, useActions, fmtExp } from "../lib/observatory";
+import { Frame } from "../ui/frame";
+import { DetentSlider, Range, Segmented } from "../ui/controls";
 
-function Field({ label, value, min, max, step, onChange }: { label: string; value: number; min: number; max: number; step: number; onChange: (n: number) => void }) {
-  return (
-    <div className="field">
-      <div className="head">
-        <b>{label}</b>
-        <input type="number" inputMode="decimal" value={value} min={min} max={max} step={step}
-          onChange={(e) => { const n = Number(e.target.value); if (!Number.isNaN(n)) onChange(Math.min(max, Math.max(min, n))); }} />
-      </div>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />
-    </div>
-  );
-}
+const EXPOSURES = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 3, 4, 5, 8, 10, 15, 20, 30, 45, 60, 90, 120, 180, 240, 300, 600];
 
 export default function Capture() {
   const { data: s } = useStatus();
   const { start, stop } = useActions();
   const capturing = !!s?.camera.capturing;
   const presets = useListPresets({ query: { queryKey: getListPresetsQueryKey() } });
-  const hist = useGetImageHistogram({ query: { queryKey: getGetImageHistogramQueryKey(), refetchInterval: capturing ? 2000 : false } });
+  const hist = useGetImageHistogram({ query: { queryKey: [...getGetImageHistogramQueryKey(), s?.frameVersion ?? 0] } });
   const [exp, setExp] = useState(3);
   const [gain, setGain] = useState(150);
   const [bin, setBin] = useState(1);
@@ -31,58 +21,62 @@ export default function Capture() {
   }, [s]);
   const bins = hist.data?.bins ?? [];
   const mx = Math.max(1, ...bins);
+  const prog = Math.round((s?.camera.exposureProgress ?? 0) * 100);
+  const activePreset = presets.data?.find((p) => p.exposureSec === exp && p.gain === gain && p.binning === bin)?.id;
 
   return (
-    <>
-      <h1 className="hero">{capturing ? "촬영 중." : "촬영 설정."}</h1>
-      <div className="btns">
-        {capturing ? (
-          <button className="btn block danger" onClick={() => stop.mutate()} disabled={stop.isPending}>촬영 정지</button>
-        ) : (
-          <button className="btn block" disabled={start.isPending} onClick={() => start.mutate({ data: { exposureSec: exp, gain, binning: bin } })}>
-            {start.isPending ? "시작 중" : "촬영 시작"}
-          </button>
-        )}
-      </div>
-      <Frame version={s?.frameVersion ?? 0} count={s?.camera.frameCount} progress={capturing ? Math.round((s?.camera.exposureProgress ?? 0) * 100) : 0} />
+    <div className="pad with-dock">
+      <p className="kicker">{capturing ? <><span className="dot busy" />노출 중 · {prog}%</> : "카메라"}</p>
+      <h1 className="title">{capturing ? `프레임 ${(s?.camera.frameCount ?? 0) + 1}` : "촬영 준비"}</h1>
+      <p className="meta">{s?.camera.model ?? "카메라"} · 센서 {s?.camera.temperatureC.toFixed(1) ?? "-"}°C</p>
 
-      <h2 className="h2">히스토그램</h2>
+      <Frame version={s?.frameVersion ?? 0} count={s?.camera.frameCount} progress={capturing ? prog : 0} />
+
+      <h2 className="section">히스토그램</h2>
       {hist.isError ? (
-        <p className="note" style={{ marginTop: 14 }}>불러오지 못했습니다. <button style={{ background: "none", border: 0, textDecoration: "underline", padding: 0 }} onClick={() => hist.refetch()}>재시도</button></p>
+        <div className="notice"><span>히스토그램을 불러오지 못했습니다</span><button type="button" onClick={() => hist.refetch()}>재시도</button></div>
       ) : bins.length === 0 ? (
-        <p className="note" style={{ marginTop: 14 }}>프레임이 없습니다.</p>
+        <p className="empty">프레임이 들어오면 표시됩니다</p>
       ) : (
-        <svg viewBox="0 0 128 48" preserveAspectRatio="none" style={{ width: "100%", height: 96, marginTop: 14, borderBottom: "1px solid var(--line)" }}>
-          {bins.map((b, i) => {
-            const h = Math.max(0.5, (Math.sqrt(b) / Math.sqrt(mx)) * 46);
-            return <rect key={i} x={i + 0.15} y={48 - h} width="0.7" height={h} fill="var(--ink)" />;
-          })}
+        <svg viewBox="0 0 128 40" preserveAspectRatio="none" className="hist" role="img" aria-label="밝기 분포">
+          <path className="hist-area" d={`M0,40 ${bins.map((b, i) => `L${i + 0.5},${(40 - Math.max(0.4, (Math.sqrt(b) / Math.sqrt(mx)) * 38)).toFixed(2)}`).join(" ")} L128,40 Z`} />
         </svg>
       )}
 
-      <h2 className="h2">프리셋</h2>
-      <ul className="rows">
+      <h2 className="section">프리셋</h2>
+      <div className="chips wrap">
         {presets.data?.map((p) => (
-          <li key={p.id}>
-            <button className="row link" onClick={() => { setExp(p.exposureSec); setGain(p.gain); setBin(p.binning); }}>
-              <b>{p.name.split(" / ")[0]}</b>
-              <span className="tnum">{p.exposureSec}s · 게인 {p.gain}</span>
-            </button>
-          </li>
+          <button key={p.id} type="button" aria-pressed={activePreset === p.id} onClick={() => { setExp(p.exposureSec); setGain(p.gain); setBin(p.binning); }}>
+            {p.name.split(" / ")[0].replace(/\s*\d+초$/, "")}
+            <span className="mono dim">{fmtExp(p.exposureSec)}</span>
+          </button>
         ))}
-      </ul>
-
-      <h2 className="h2">값</h2>
-      <Field label="노출 (초)" value={exp} min={0.001} max={600} step={exp < 10 ? 0.5 : 1} onChange={setExp} />
-      <Field label="게인" value={gain} min={0} max={600} step={1} onChange={setGain} />
-      <div className="field">
-        <div className="head"><b>비닝</b></div>
-        <div className="seg">
-          {[1, 2, 3, 4].map((b) => (
-            <button key={b} className={bin === b ? "on" : ""} onClick={() => setBin(b)}>{b}x{b}</button>
-          ))}
-        </div>
       </div>
-    </>
+
+      <div className="ctl">
+        <div className="ctl-head"><span>노출</span><b className="mono">{fmtExp(exp)}</b></div>
+        <DetentSlider label="노출 시간" values={EXPOSURES} value={exp} onChange={setExp} format={fmtExp} />
+        <div className="ctl-scale mono"><span>1ms</span><span>1s</span><span>10min</span></div>
+      </div>
+      <div className="ctl">
+        <div className="ctl-head"><span>게인</span><b className="mono">{gain}</b></div>
+        <Range label="게인" min={0} max={600} step={1} value={gain} onChange={setGain} />
+        <div className="ctl-scale mono"><span>0</span><span>300</span><span>600</span></div>
+      </div>
+      <div className="ctl">
+        <div className="ctl-head"><span>비닝</span></div>
+        <Segmented<number> label="비닝" value={bin} onChange={setBin} options={[1, 2, 3, 4].map((b) => ({ v: b, l: `${b}×${b}` }))} />
+      </div>
+
+      <div className="dock">
+        {capturing ? (
+          <button type="button" className="btn danger wide" onClick={() => stop.mutate()} disabled={stop.isPending}>촬영 멈춤</button>
+        ) : (
+          <button type="button" className="btn primary wide" disabled={start.isPending} onClick={() => start.mutate({ data: { exposureSec: exp, gain, binning: bin } })}>
+            {start.isPending ? "시작하는 중" : `${fmtExp(exp)} · 게인 ${gain}로 촬영`}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }

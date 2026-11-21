@@ -16,7 +16,6 @@
     "jpeg-js": "^0.4.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "wouter": "^3.3.5",
     "zod": "^3.25.76"
   },
   "devDependencies": {
