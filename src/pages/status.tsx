@@ -30,7 +30,7 @@ export default function Status({ onGoto, onCapture }: { onGoto: () => void; onCa
     <div className="pad">
       <header className="head">
         <p className={`eyebrow tone-${busy ? "busy" : m.tracking ? "ok" : "idle"}`}>{stateKo[m.state] ?? m.state}</p>
-        <h1 className="title">{t ? t.name : "관측 대상 없음"}</h1>
+        <h1 className="title" tabIndex={-1}>{t ? t.name : "관측 대상 없음"}</h1>
         <p className="meta">{t ? [t.catalogId, t.type, t.constellation].filter(Boolean).join(" · ") : "대상 화면에서 오늘 밤 볼 천체를 고르세요"}</p>
       </header>
 
@@ -48,11 +48,13 @@ export default function Status({ onGoto, onCapture }: { onGoto: () => void; onCa
         <button type="button" className="btn" onClick={onGoto}>대상 고르기</button>
       </div>
 
+      <div className="status-frame">
       <Frame version={s.frameVersion} count={c.frameCount} progress={c.capturing ? prog : 0} />
       <button type="button" className="link-more" onClick={onCapture}>
         <span className="num">{fmtExp(c.exposureSec)} · 게인 {c.gain} · {c.binning}×{c.binning}</span>
         <span>설정 변경</span>
       </button>
+      </div>
 
       <h2 className="section">망원경 위치</h2>
       <div className="coords">

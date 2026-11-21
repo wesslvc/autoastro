@@ -29,6 +29,11 @@ export function Sheet({ open, onClose, children, label }: { open: boolean; onClo
     return () => window.removeEventListener("keydown", k);
   }, [open, onClose]);
 
+  // Move focus into the dialog so keyboard users land inside it.
+  useEffect(() => {
+    if (shown) body.current?.closest<HTMLElement>(".sheet")?.focus({ preventScroll: true });
+  }, [shown]);
+
   if (!mounted) return null;
 
   const down = (e: React.PointerEvent) => {
@@ -57,13 +62,18 @@ export function Sheet({ open, onClose, children, label }: { open: boolean; onClo
       <div className="sheet-scrim" style={{ opacity: shown ? Math.max(0, 1 - dy / 500) : 0 }} onClick={onClose} />
       <div
         className="sheet"
-        style={{ transform: `translateY(${shown ? Math.max(dy, -20) : 0}px)`, ...(shown ? {} : { transform: "translateY(100%)" }), transition: dragging ? "none" : undefined }}
+        data-shown={shown || undefined}
+        tabIndex={-1}
+        style={{ "--dy": `${Math.max(dy, -20)}px`, transition: dragging ? "none" : undefined } as React.CSSProperties}
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
         onPointerCancel={up}
       >
         <div className="sheet-grip"><span /></div>
+        <button type="button" className="sheet-close" onClick={onClose} aria-label="닫기">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" /></svg>
+        </button>
         <div className="sheet-body" ref={body}>{children}</div>
       </div>
     </div>

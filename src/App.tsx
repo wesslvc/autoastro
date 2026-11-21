@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useActions, useStatus } from "./lib/observatory";
 import { useSettings, wakeLockSupported, buzz } from "./lib/settings";
 import { Sheet } from "./ui/sheet";
@@ -19,6 +19,22 @@ const ICONS = [
   <svg key="2" viewBox="0 0 24 24"><rect x="3" y="6.5" width="18" height="13" rx="2.5" /><circle cx="12" cy="13" r="3.6" /><path d="M8.5 6.5L10 4h4l1.5 2.5" /></svg>,
 ];
 
+const WIDE = "(min-width: 1080px)";
+
+/** True when all three pages fit side by side (desktop). */
+function useWide() {
+  const [wide, setWide] = useState(() => matchMedia(WIDE).matches);
+  useEffect(() => {
+    const mq = matchMedia(WIDE);
+    const on = () => setWide(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return wide;
+}
+
+const typing = (el: EventTarget | null) => el instanceof HTMLElement && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+
 export default function App() {
   const { s, set } = useSettings();
   const { data: st, isError } = useStatus();
@@ -28,17 +44,20 @@ export default function App() {
   const [pos, setPos] = useState(initial);
   const [settings, setSettings] = useState(false);
   const idx = Math.round(pos);
+  const wide = useWide();
 
   useLayoutEffect(() => {
+    if (wide) return;
     const el = pager.current!;
-    el.scrollLeft = initial * el.clientWidth;
+    el.scrollLeft = Math.round(pos) * el.clientWidth;
     // Keep the current page aligned when the viewport is resized or rotated.
     const ro = new ResizeObserver(() => { el.scrollLeft = Math.round(el.scrollLeft / el.clientWidth) * el.clientWidth; });
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [wide]);
 
   const onScroll = () => {
+    if (wide) return;
     const el = pager.current!;
     const p = el.scrollLeft / el.clientWidth;
     setPos(p);
@@ -48,15 +67,37 @@ export default function App() {
       buzz(5);
     }
   };
-  const go = useCallback((i: number) => {
+  // Every page is on screen when wide, so "going" to one means moving focus there.
+  const go = useCallback((i: number, focus = false) => {
     const el = pager.current!;
+    if (wide) {
+      setPos(i);
+      const target = el.children[i]?.querySelector<HTMLElement>(i === 1 ? "#target-search" : "h1");
+      if (i === 1 || focus) target?.focus({ preventScroll: false });
+      return;
+    }
     el.scrollTo({ left: i * el.clientWidth, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
-  }, []);
+    if (focus && i === 1) setTimeout(() => el.querySelector<HTMLElement>("#target-search")?.focus({ preventScroll: true }), 350);
+  }, [wide]);
+
+  // Keyboard: "/" search, 1–3 switch pages.
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || typing(e.target) || document.querySelector(".sheet-layer, .viewer")) return;
+      if (e.key === "/") { e.preventDefault(); go(1, true); }
+      else if (e.key >= "1" && e.key <= "3") go(Number(e.key) - 1, true);
+    };
+    addEventListener("keydown", k);
+    return () => removeEventListener("keydown", k);
+  }, [go]);
+
+  const hidden = (i: number) => !wide && idx !== i;
+  const inert = (i: number) => (hidden(i) && Math.abs(pos - idx) < 0.01 ? true : undefined);
 
   const link = isError ? "err" : !st ? "wait" : st.connected ? "ok" : "err";
   return (
     <>
-      <div className="app">
+      <div className={`app${wide ? " wide" : ""}`}>
         <header className="bar">
           <button type="button" className="brand" onClick={() => setSettings(true)} aria-label="설정 열기">
             <span>
@@ -74,11 +115,11 @@ export default function App() {
 
 
         <div className="pager" ref={pager} onScroll={onScroll}>
-          <section className="page" aria-hidden={idx !== 0} inert={idx !== 0 && Math.abs(pos - idx) < 0.01 ? true : undefined}><Status onGoto={() => go(1)} onCapture={() => go(2)} /></section>
-          <section className="page" aria-hidden={idx !== 1} inert={idx !== 1 && Math.abs(pos - idx) < 0.01 ? true : undefined}><Targets onSent={() => go(0)} /></section>
-          <section className="page" aria-hidden={idx !== 2} inert={idx !== 2 && Math.abs(pos - idx) < 0.01 ? true : undefined}><Capture /></section>
+          <section className="page" aria-label="관측" aria-hidden={hidden(0)} inert={inert(0)}><Status onGoto={() => go(1, true)} onCapture={() => go(2, true)} /></section>
+          <section className="page" aria-label="대상" aria-hidden={hidden(1)} inert={inert(1)}><Targets onSent={() => go(0)} /></section>
+          <section className="page" aria-label="촬영" aria-hidden={hidden(2)} inert={inert(2)}><Capture /></section>
         </div>
-        <nav className="tabbar" role="tablist" aria-label="화면">
+        {!wide && <nav className="tabbar" role="tablist" aria-label="화면">
           <i style={{ transform: `translateX(${pos * 100}%)` }} />
           {TABS.map((t, i) => (
             <button key={t.path} type="button" role="tab" aria-selected={idx === i} onClick={() => go(i)}>
@@ -86,7 +127,7 @@ export default function App() {
               <span>{t.label}</span>
             </button>
           ))}
-        </nav>
+        </nav>}
       </div>
 
       <Sheet open={settings} onClose={() => setSettings(false)} label="설정">
@@ -100,7 +141,11 @@ export default function App() {
           <div><dt>연결</dt><dd>{st?.mock ? "내장 시뮬레이터" : st?.connected ? "N.I.N.A. Advanced API" : "연결 안 됨"}</dd></div>
           <div><dt>카메라</dt><dd>{st?.camera.model || "-"}</dd></div>
         </dl>
-        <p className="fine">좌우로 밀어 화면을 넘기고, 시트는 아래로 끌어 닫을 수 있습니다.</p>
+        <p className="fine">
+          {wide
+            ? "단축키: / 대상 검색 · 1 2 3 화면 이동 · Esc 닫기"
+            : "좌우로 밀어 화면을 넘기고, 시트는 아래로 끌어 닫을 수 있습니다."}
+        </p>
       </Sheet>
     </>
   );

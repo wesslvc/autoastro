@@ -60,12 +60,12 @@ export default function Targets({ onSent }: { onSent: () => void }) {
     <div className="pad">
       <header className="head">
         <p className="eyebrow">카탈로그</p>
-        <h1 className="title">오늘 밤 볼 대상</h1>
+        <h1 className="title" tabIndex={-1}>오늘 밤 볼 대상</h1>
       </header>
 
       <div className="search">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="8" cy="8" r="5.5" /><path d="M12.2 12.2L16 16" strokeLinecap="round" /></svg>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="M31, NGC 7000, 목성" aria-label="대상 검색" enterKeyHint="search" />
+        <input id="target-search" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Escape") { setQ(""); e.currentTarget.blur(); } }} placeholder="M31, NGC 7000, 목성" aria-label="대상 검색" enterKeyHint="search" />
         {q && <button type="button" onClick={() => setQ("")} aria-label="지우기">지우기</button>}
       </div>
 
