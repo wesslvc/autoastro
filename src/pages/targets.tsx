@@ -58,8 +58,10 @@ export default function Targets({ onSent }: { onSent: () => void }) {
 
   return (
     <div className="pad">
-      <p className="kicker">카탈로그</p>
-      <h1 className="title">오늘 밤 볼 대상</h1>
+      <header className="head">
+        <p className="eyebrow">카탈로그</p>
+        <h1 className="title">오늘 밤 볼 대상</h1>
+      </header>
 
       <div className="search">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.6"><circle cx="8" cy="8" r="5.5" /><path d="M12.2 12.2L16 16" strokeLinecap="round" /></svg>
@@ -91,7 +93,7 @@ export default function Targets({ onSent }: { onSent: () => void }) {
                 <small>{it.catalogId} · {it.type}{it.magnitude != null ? ` · ${it.magnitude.toFixed(1)}등급` : ""}</small>
               </span>
               <span className="t-alt">
-                <span className="mono">{it.aboveHorizon ? `${it.altitude.toFixed(0)}°` : "아래"}</span>
+                <span className="num">{it.aboveHorizon ? `${it.altitude.toFixed(0)}°` : "아래"}</span>
                 <AltBar alt={it.altitude} />
               </span>
             </button>
@@ -104,13 +106,13 @@ export default function Targets({ onSent }: { onSent: () => void }) {
         {detail.isError && <div className="notice"><span>대상 정보를 불러오지 못했습니다</span><button type="button" onClick={() => detail.refetch()}>재시도</button></div>}
         {t && (
           <>
-            <p className="kicker">{t.catalogId}</p>
+            <p className="eyebrow">{t.catalogId}</p>
             <h2 className="sheet-title big">{t.name}</h2>
             <p className="meta">{[t.type, t.constellation, t.magnitude != null ? `${t.magnitude.toFixed(1)}등급` : null].filter(Boolean).join(" · ")}</p>
 
             <div className="coords" style={{ marginTop: 20 }}>
-              <div><small>고도</small><b className="mono">{t.altitude.toFixed(1)}°</b></div>
-              <div><small>방위</small><b className="mono">{t.azimuth.toFixed(0)}° <span className="dim">{compass(t.azimuth)}</span></b></div>
+              <div><small>고도</small><b className="num">{t.altitude.toFixed(1)}°</b></div>
+              <div><small>방위</small><b className="num">{t.azimuth.toFixed(0)}° <span className="dim">{compass(t.azimuth)}</span></b></div>
               <div><small>적경</small><b className="mono">{fmtRa(t.raHours)}</b></div>
               <div><small>적위</small><b className="mono">{fmtDec(t.decDegrees)}</b></div>
             </div>

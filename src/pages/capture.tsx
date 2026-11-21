@@ -26,9 +26,11 @@ export default function Capture() {
 
   return (
     <div className="pad with-dock">
-      <p className="kicker">{capturing ? <><span className="dot busy" />노출 중 · {prog}%</> : "카메라"}</p>
-      <h1 className="title">{capturing ? `프레임 ${(s?.camera.frameCount ?? 0) + 1}` : "촬영 준비"}</h1>
-      <p className="meta">{s?.camera.model ?? "카메라"} · 센서 {s?.camera.temperatureC.toFixed(1) ?? "-"}°C</p>
+      <header className="head">
+        <p className="eyebrow">{capturing ? <><span className="dot busy" />노출 중 · <span className="num">{prog}%</span></> : "카메라"}</p>
+        <h1 className="title">{capturing ? `프레임 ${(s?.camera.frameCount ?? 0) + 1}` : "촬영 준비"}</h1>
+        <p className="meta">{s?.camera.model ?? "카메라"} · 센서 <span className="num">{s?.camera.temperatureC.toFixed(1) ?? "-"}°C</span></p>
+      </header>
 
       <Frame version={s?.frameVersion ?? 0} count={s?.camera.frameCount} progress={capturing ? prog : 0} />
 
@@ -48,20 +50,20 @@ export default function Capture() {
         {presets.data?.map((p) => (
           <button key={p.id} type="button" aria-pressed={activePreset === p.id} onClick={() => { setExp(p.exposureSec); setGain(p.gain); setBin(p.binning); }}>
             {p.name.split(" / ")[0].replace(/\s*\d+초$/, "")}
-            <span className="mono dim">{fmtExp(p.exposureSec)}</span>
+            <span className="num dim">{fmtExp(p.exposureSec)}</span>
           </button>
         ))}
       </div>
 
       <div className="ctl">
-        <div className="ctl-head"><span>노출</span><b className="mono">{fmtExp(exp)}</b></div>
+        <div className="ctl-head"><span>노출</span><b className="num">{fmtExp(exp)}</b></div>
         <DetentSlider label="노출 시간" values={EXPOSURES} value={exp} onChange={setExp} format={fmtExp} />
-        <div className="ctl-scale mono"><span>1ms</span><span>1s</span><span>10min</span></div>
+        <div className="ctl-scale num"><span>1ms</span><span>1s</span><span>10min</span></div>
       </div>
       <div className="ctl">
-        <div className="ctl-head"><span>게인</span><b className="mono">{gain}</b></div>
+        <div className="ctl-head"><span>게인</span><b className="num">{gain}</b></div>
         <Range label="게인" min={0} max={600} step={1} value={gain} onChange={setGain} />
-        <div className="ctl-scale mono"><span>0</span><span>300</span><span>600</span></div>
+        <div className="ctl-scale num"><span>0</span><span>300</span><span>600</span></div>
       </div>
       <div className="ctl">
         <div className="ctl-head"><span>비닝</span></div>

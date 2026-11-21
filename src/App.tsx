@@ -1,7 +1,6 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { useActions, useStatus } from "./lib/observatory";
 import { useSettings, wakeLockSupported, buzz } from "./lib/settings";
-import { Starfield } from "./ui/sky";
 import { Sheet } from "./ui/sheet";
 import { Toggle } from "./ui/controls";
 import Status from "./pages/status";
@@ -12,6 +11,12 @@ const TABS = [
   { path: "/", label: "관측" },
   { path: "/targets", label: "대상" },
   { path: "/capture", label: "촬영" },
+];
+
+const ICONS = [
+  <svg key="0" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="2" /><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3" /></svg>,
+  <svg key="1" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5L21 21" /></svg>,
+  <svg key="2" viewBox="0 0 24 24"><rect x="3" y="6.5" width="18" height="13" rx="2.5" /><circle cx="12" cy="13" r="3.6" /><path d="M8.5 6.5L10 4h4l1.5 2.5" /></svg>,
 ];
 
 export default function App() {
@@ -51,7 +56,6 @@ export default function App() {
   const link = isError ? "err" : !st ? "wait" : st.connected ? "ok" : "err";
   return (
     <>
-      <Starfield night={s.night} />
       <div className="app">
         <header className="bar">
           <button type="button" className="brand" onClick={() => setSettings(true)} aria-label="설정 열기">
@@ -69,18 +73,21 @@ export default function App() {
           </div>
         </header>
 
-        <nav className="tabs" role="tablist" aria-label="화면">
-          <i style={{ transform: `translateX(${pos * 100}%)` }} />
-          {TABS.map((t, i) => (
-            <button key={t.path} type="button" role="tab" aria-selected={idx === i} onClick={() => go(i)}>{t.label}</button>
-          ))}
-        </nav>
 
         <div className="pager" ref={pager} onScroll={onScroll}>
           <section className="page" aria-hidden={idx !== 0} inert={idx !== 0 && Math.abs(pos - idx) < 0.01 ? true : undefined}><Status onGoto={() => go(1)} onCapture={() => go(2)} /></section>
           <section className="page" aria-hidden={idx !== 1} inert={idx !== 1 && Math.abs(pos - idx) < 0.01 ? true : undefined}><Targets onSent={() => go(0)} /></section>
           <section className="page" aria-hidden={idx !== 2} inert={idx !== 2 && Math.abs(pos - idx) < 0.01 ? true : undefined}><Capture /></section>
         </div>
+        <nav className="tabbar" role="tablist" aria-label="화면">
+          <i style={{ transform: `translateX(${pos * 100}%)` }} />
+          {TABS.map((t, i) => (
+            <button key={t.path} type="button" role="tab" aria-selected={idx === i} onClick={() => go(i)}>
+              {ICONS[i]}
+              <span>{t.label}</span>
+            </button>
+          ))}
+        </nav>
       </div>
 
       <Sheet open={settings} onClose={() => setSettings(false)} label="설정">
